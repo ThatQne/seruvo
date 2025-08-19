@@ -98,7 +98,12 @@ export default function AuthPage() {
 
         if (signInError) {
           // If sign in fails, try sign up
-          if (signInError.message.includes('Invalid login credentials')) {
+          const errorMessage = (signInError instanceof Error)
+            ? signInError.message
+            : typeof signInError === 'object' && signInError !== null && 'message' in signInError
+              ? (signInError as any).message
+              : '';
+          if (errorMessage.includes('Invalid login credentials')) {
             if (!fullName.trim()) {
               setIsExistingUser(false) // Show the full name field
               setError('Please enter your full name to create an account')
@@ -113,7 +118,7 @@ export default function AuthPage() {
               router.push('/dashboard')
             }
           } else {
-            setError(signInError instanceof Error ? signInError.message : 'Sign in failed')
+            setError(errorMessage || 'Sign in failed')
           }
         } else {
           router.push('/dashboard')
