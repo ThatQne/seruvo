@@ -260,7 +260,7 @@ export default function ImageUpload({ albumId, onUploadComplete, isPublicAlbum =
                     color: expiryOption === option.value ? theme.accent.blue : theme.grayscale.foreground,
                     fontWeight: expiryOption === option.value ? 600 : 400,
                   }}
-                  onClick={() => setExpiryOption(option.value as any)}
+                  onClick={() => setExpiryOption(option.value as typeof expiryOption)}
                 >
                   <div className="text-sm font-medium" style={{ color: theme.grayscale.foreground }}>{option.label}</div>
                   <div className="text-xs" style={{ color: theme.grayscale.muted }}>{option.desc}</div>
