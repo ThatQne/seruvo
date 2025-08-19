@@ -146,41 +146,36 @@ export default function AlbumDetailPage({ params }: { params: Promise<{ albumId:
     if (!confirmed) return
 
     try {
-      // Delete from storage and database
-      const imagesToDelete = images.filter(img => selectedImages.has(img.id))
-      const storagePaths = imagesToDelete.map(img => img.storage_path)
-      if (storagePaths.length > 0) {
-        const { error: storageError } = await supabase.storage.from('images').remove(storagePaths)
-        if (storageError) throw storageError
+      const toDelete = Array.from(selectedImages)
+      const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/delete-images`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageIds: toDelete, userId: user?.id })
+      })
+      if (!resp.ok) {
+        const data = await resp.json().catch(() => ({}))
+        throw new Error(data.error || 'Failed to delete images')
       }
-      // Delete from database
-      const { error } = await supabase
-        .from('images')
-        .delete()
-        .in('id', Array.from(selectedImages))
-        .eq('user_id', user?.id)
-      if (error) throw error
-      // Update local state
       setImages(prev => prev.filter(img => !selectedImages.has(img.id)))
       setSelectedImages(new Set())
     } catch (error) {
       console.error('Error deleting images:', error)
+      alert('Failed to delete images. See console for details.')
     }
   }
 
   const deleteSingleImage = async (image: ImageData) => {
     if (!confirm('Delete this image? This cannot be undone.')) return
     try {
-      // Remove from storage first
-      const { error: storageError } = await supabase.storage.from('images').remove([image.storage_path])
-      if (storageError) throw storageError
-      // Remove from DB
-      const { error: dbError } = await supabase
-        .from('images')
-        .delete()
-        .eq('id', image.id)
-        .eq('user_id', user?.id)
-      if (dbError) throw dbError
+      const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/delete-images`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageIds: [image.id], userId: user?.id })
+      })
+      if (!resp.ok) {
+        const data = await resp.json().catch(() => ({}))
+        throw new Error(data.error || 'Failed to delete image')
+      }
       // Update state
       setImages(prev => prev.filter(i => i.id !== image.id))
       setSelectedImages(prev => {

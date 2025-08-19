@@ -89,20 +89,23 @@ export default function SharedImagePage({ params }: { params: Promise<{ imageId:
         return
       }
 
-      // If expires on open and hasn't been opened yet, mark as opened and set expiry
-      // BUT only if the viewer is not the owner of the image
+      // Expires-on-open logic: delegate to backend endpoint to ensure consistent timing
       if (data.expires_on_open && !data.opened_at && (!user || user.id !== data.user_id)) {
-        const expiresAt = new Date(Date.now() + 5 * 60 * 1000) // 5 minutes from now
-
-        await supabase
-          .from('images')
-          .update({
-            opened_at: new Date().toISOString(),
-            expires_at: expiresAt.toISOString()
+        try {
+          const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/open-image`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imageId })
           })
-          .eq('id', imageId)
-
-        data.expires_at = expiresAt.toISOString()
+          if (resp.ok) {
+            const payload = await resp.json()
+            if (payload.expires_at) {
+              data.expires_at = payload.expires_at
+            }
+          }
+        } catch (e) {
+          console.warn('Failed to start open-image expiry', e)
+        }
       }
 
       setImage(data)

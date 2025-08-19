@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS public.images (
     alt_text TEXT,
     expires_at TIMESTAMP WITH TIME ZONE,
     expires_on_open BOOLEAN DEFAULT FALSE,
+    opened_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -153,3 +154,6 @@ CREATE TRIGGER update_albums_updated_at
 CREATE TRIGGER update_images_updated_at
     BEFORE UPDATE ON public.images
     FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+-- Add missing opened_at column if running against existing DB
+ALTER TABLE public.images ADD COLUMN IF NOT EXISTS opened_at TIMESTAMP WITH TIME ZONE;
