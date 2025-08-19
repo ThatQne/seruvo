@@ -253,7 +253,7 @@ export default function APIExplorerPage() {
                     <div>
                       <Code className="h-12 w-12" style={{ color: theme.grayscale.muted, margin: '0 auto 16px' }} />
                       <p style={{ color: theme.grayscale.muted }}>
-                        Select an endpoint and click "Execute Request" to see the response
+                        Select an endpoint and click &quot;Execute Request&quot; to see the response
                       </p>
                     </div>
                   </div>
@@ -273,7 +273,7 @@ export default function APIExplorerPage() {
               <div style={{ padding: 16, background: theme.accent.blue + '22', borderRadius: 12 }}>
                 <h3 className="font-medium mb-2" style={{ color: theme.accent.blue }}>Get Album IDs</h3>
                 <p className="text-sm" style={{ color: theme.accent.blue }}>
-                  In your dashboard, click the <code style={{ background: theme.accent.blue + '33', padding: '0 4px', borderRadius: 4 }}>{'<>'}</code> icon next to any album to copy its ID for API testing.
+                  In your dashboard, click the <code style={{ background: theme.accent.blue + '33', padding: '0 4px', borderRadius: 4 }}>&lt;&gt;</code> icon next to any album to copy its ID for API testing.
                 </p>
               </div>
               <div style={{ padding: 16, background: theme.accent.green + '22', borderRadius: 12 }}>

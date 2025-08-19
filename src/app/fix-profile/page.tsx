@@ -3,9 +3,11 @@
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { createSupabaseClient } from '@/lib/supabase'
+
 import Button from '@/components/ui/Button'
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { CheckCircle, AlertCircle, User } from 'lucide-react'
+import Link from 'next/link'
 
 export default function FixProfilePage() {
   const { user } = useAuth()
@@ -161,16 +163,16 @@ export default function FixProfilePage() {
               <div className="text-center">
                 <p className="text-gray-600 mb-4">Your profile is now fixed! You can:</p>
                 <div className="space-y-2">
-                  <a href="/albums" className="block">
+                  <Link href="/albums" className="block">
                     <Button variant="outline" className="w-full">
                       Go to Albums
                     </Button>
-                  </a>
-                  <a href="/dashboard" className="block">
+                  </Link>
+                  <Link href="/dashboard" className="block">
                     <Button variant="outline" className="w-full">
                       Go to Dashboard
                     </Button>
-                  </a>
+                  </Link>
                 </div>
               </div>
             )}

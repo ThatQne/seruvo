@@ -246,7 +246,15 @@ export default function AlbumDetailPage({ params }: { params: Promise<{ albumId:
         .order('name')
 
       if (error) throw error
-      setAvailableAlbums(data || [])
+      // Map to Album type, filling missing fields with null/defaults
+      const albums: Album[] = (data || []).map((a: any) => ({
+        id: a.id,
+        name: a.name,
+        is_public: a.is_public,
+        description: null,
+        created_at: ''
+      }))
+      setAvailableAlbums(albums)
     } catch (error) {
       console.error('Error fetching albums:', error)
     }

@@ -1,10 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-interface GuestSession {
-  id: string;
-  // Add more fields if your guest session stores more data
-}
 import { useRouter } from 'next/navigation'
 import { createSupabaseClient } from '@/lib/supabase'
 import { generateUniqueFilename, formatFileSize, isValidImageType } from '@/lib/utils'
@@ -29,7 +25,7 @@ export default function GuestUploadPage() {
   const [uploadFiles, setUploadFiles] = useState<GuestUploadFile[]>([])
   const [uploading, setUploading] = useState(false)
   const [expiryOption, setExpiryOption] = useState<'on-open' | '1-hour' | '1-day' | '3-days'>('1-day')
-  const [guestSession, setGuestSession] = useState<GuestSession | null>(null)
+  const [guestSession, setGuestSession] = useState<any>(null)
   const router = useRouter()
   const supabase = createSupabaseClient()
 
@@ -40,7 +36,7 @@ export default function GuestUploadPage() {
       router.push('/auth')
       return
     }
-    setGuestSession(JSON.parse(session) as GuestSession)
+    setGuestSession(JSON.parse(session))
   }, [router])
 
   const onDrop = (acceptedFiles: File[]) => {
@@ -219,7 +215,7 @@ export default function GuestUploadPage() {
                   color: expiryOption === option.value ? theme.accent.blue : theme.grayscale.foreground,
                   fontWeight: expiryOption === option.value ? 600 : 400,
                 }}
-                onClick={() => setExpiryOption(option.value as typeof expiryOption)}
+                onClick={() => setExpiryOption(option.value as any)}
               >
                 <div className="text-sm font-medium" style={{ color: theme.grayscale.foreground }}>{option.label}</div>
                 <div className="text-xs" style={{ color: theme.grayscale.muted }}>{option.desc}</div>
