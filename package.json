@@ -2,6 +2,7 @@
   "name": "seruvo",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://ThatQne.github.io/seruvo",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
