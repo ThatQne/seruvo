@@ -48,7 +48,13 @@ export default function DashboardPage() {
     console.log('Dashboard useEffect:', { loading, user: !!user, loadingData })
 
     if (!loading && !user) {
-      router.push('/auth')
+      // Double-check session to avoid race condition
+      (async () => {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) {
+          router.push('/auth')
+        }
+      })()
       return
     }
 

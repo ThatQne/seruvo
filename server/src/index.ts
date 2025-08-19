@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import multer from 'multer';
 import dotenv from 'dotenv';
-import { supabase } from './lib/supabase';
+import { supabase, getServiceClient } from './lib/supabase';
 
 dotenv.config();
 
@@ -153,22 +153,47 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
 
 app.post('/api/check-email', async (req, res) => {
   const { email } = req.body;
-
+  const started = Date.now();
   if (!email) {
     return res.status(400).json({ error: 'Missing email' });
   }
 
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('id')
-    .eq('email', email)
-    .maybeSingle();
+  try {
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', email)
+      .maybeSingle();
 
-  if (error) {
+    if (profileError) {
+      console.error('[check-email] profiles query error', profileError);
+    }
+
+    if (profile) {
+      return res.json({ exists: true, source: 'profiles', ms: Date.now() - started });
+    }
+
+    // Fallback: if profile missing but user might exist (trigger not run), check auth.users with service role
+    const serviceClient = getServiceClient();
+    if (serviceClient) {
+      const { data: authUsers, error: authError } = await serviceClient
+        .from('auth.users' as any)
+        .select('id, email')
+        .eq('email', email)
+        .limit(1);
+      if (authError) {
+        console.error('[check-email] auth.users lookup error', authError);
+      }
+      if (authUsers && authUsers.length > 0) {
+        return res.json({ exists: true, source: 'auth.users', ms: Date.now() - started });
+      }
+    }
+
+    return res.json({ exists: false, ms: Date.now() - started });
+  } catch (e) {
+    console.error('[check-email] unexpected error', e);
     return res.status(500).json({ error: 'Failed to check email' });
   }
-
-  res.json({ exists: !!data });
 });
 
 app.listen(port, () => {

@@ -1,4 +1,6 @@
 // API base URL - always use the Render backend
+// Central API base URL. Ensure NEXT_PUBLIC_API_URL is set in Vercel env.
+// The fallback placeholder should never be used in production.
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://your-backend-url.onrender.com';
 
 export async function fetcher<T>(

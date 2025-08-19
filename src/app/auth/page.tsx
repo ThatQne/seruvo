@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { createSupabaseClient } from '@/lib/supabase'
+import { API_BASE_URL } from '@/lib/api'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
@@ -35,7 +36,10 @@ export default function AuthPage() {
 
       try {
         // Use our API endpoint to check if email exists
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/check-email`, {
+  const base = process.env.NEXT_PUBLIC_API_URL || API_BASE_URL
+  const url = `${base}/api/check-email`
+  console.log('[auth] checking email', { email, url })
+  const response = await fetch(url, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -46,6 +50,7 @@ export default function AuthPage() {
         const data = await response.json()
 
         if (response.ok) {
+          console.log('[auth] check-email result', data)
           setIsExistingUser(data.exists)
         } else {
           console.error('Email check failed:', data.error)
@@ -76,7 +81,11 @@ export default function AuthPage() {
         if (error) {
           setError(error instanceof Error ? error.message : 'Sign in failed')
         } else {
-          router.push('/dashboard')
+          // Wait briefly then verify session before redirect (avoid race)
+          await new Promise(r => setTimeout(r, 150))
+          const { data: { session } } = await supabase.auth.getSession()
+          console.log('[auth] post-signin session', !!session)
+            router.push('/dashboard')
         }
       } else if (isExistingUser === false) {
         // We know this is a new user, try to sign up
@@ -115,12 +124,18 @@ export default function AuthPage() {
             if (signUpError) {
               setError(signUpError instanceof Error ? signUpError.message : 'Sign up failed')
             } else {
+              await new Promise(r => setTimeout(r, 200))
+              const { data: { session } } = await supabase.auth.getSession()
+              console.log('[auth] post-signup session', !!session)
               router.push('/dashboard')
             }
           } else {
             setError(errorMessage || 'Sign in failed')
           }
         } else {
+          await new Promise(r => setTimeout(r, 150))
+          const { data: { session } } = await supabase.auth.getSession()
+          console.log('[auth] post-signin (unknown path) session', !!session)
           router.push('/dashboard')
         }
       }
