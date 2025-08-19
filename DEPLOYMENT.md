@@ -1,53 +1,67 @@
-# 🚀 GitHub Pages Deployment Guide
+# 🚀 Deployment Guide
 
-Deploy your ImageHost app to GitHub Pages with a single command!
+Deploy your ImageHost app with separate frontend and backend services.
 
-## Quick Deploy
+## Architecture
+
+- **Frontend**: Next.js app deployed to Vercel/Netlify
+- **Backend**: Express.js API server deployed to Render
+- **Database**: Supabase (hosted)
+
+## Backend Deployment (Render)
+
+### 1. Create Render Service
+
+1. Go to [Render](https://render.com) and create an account
+2. Click "New" → "Web Service"
+3. Connect your GitHub repository
+4. Configure the service:
+   - **Name**: `imagehost-backend`
+   - **Root Directory**: `server`
+   - **Environment**: `Node`
+   - **Build Command**: `npm install && npm run build`
+   - **Start Command**: `npm start`
+
+### 2. Set Environment Variables
+
+In Render dashboard, add these environment variables:
+```
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+PORT=10000
+```
+
+### 3. Deploy
+
+Render will automatically deploy your backend when you push to your main branch.
+
+Your backend URL will be: `https://your-service-name.onrender.com`
+
+## Frontend Deployment
+
+### Option 1: Vercel (Recommended)
 
 ```bash
-npm run deploy
+npm install -g vercel
+vercel --prod
 ```
 
-That's it! The script handles everything automatically.
+### Option 2: Netlify
 
-## What the Script Does
-
-1. **🔒 Protects Private Data**
-   - Creates a production environment with demo/public values
-   - Never exposes your real Supabase keys or private data
-   - Automatically excludes sensitive files
-
-2. **⚙️ Configures for GitHub Pages**
-   - Updates Next.js config for static export
-   - Sets up proper base paths and asset prefixes
-   - Optimizes images for static hosting
-
-3. **🏗️ Builds & Deploys**
-   - Builds the app with production settings
-   - Creates/updates the `gh-pages` branch
-   - Pushes to GitHub Pages automatically
-
-4. **🧹 Cleans Up**
-   - Restores original configuration
-   - Removes temporary files
-   - Leaves your dev environment unchanged
-
-## First-Time Setup
-
-### 1. Update Repository URLs
-
-Edit `scripts/deploy-github-pages.js` and replace:
-```javascript
-NEXT_PUBLIC_APP_URL=https://YOUR-USERNAME.github.io/YOUR-REPO-NAME
-NEXT_PUBLIC_BASE_PATH=/YOUR-REPO-NAME
+```bash
+npm run build
+# Upload the 'out' folder to Netlify
 ```
 
-### 2. Configure GitHub Repository
+### Environment Variables for Frontend
 
-1. Push your code to GitHub
-2. Go to repository Settings → Pages
-3. Set source to "Deploy from a branch"
-4. Select "gh-pages" branch and "/ (root)" folder
+Set these in your deployment platform:
+```
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+NEXT_PUBLIC_API_URL=https://your-backend-url.onrender.com
+```
 5. Save settings
 
 ### 3. Set Up Demo Supabase (Optional)

@@ -15,9 +15,11 @@ A clean, minimalist image hosting platform with drag-and-drop uploads, album man
 ## Tech Stack
 
 - **Frontend**: Next.js 14, TypeScript, Tailwind CSS
-- **Backend**: Supabase (Database, Auth, Storage)
+- **Backend**: Express.js server with TypeScript
+- **Database & Auth**: Supabase (Database, Auth, Storage)
 - **UI Components**: Custom components with Lucide icons
-- **File Upload**: React Dropzone
+- **File Upload**: React Dropzone with Multer backend
+- **Deployment**: Frontend on Vercel/Netlify, Backend on Render
 
 ## Setup Instructions
 
@@ -31,20 +33,40 @@ A clean, minimalist image hosting platform with drag-and-drop uploads, album man
 ### 2. Environment Variables
 
 1. Copy `.env.example` to `.env.local`
-2. Fill in your Supabase credentials:
+2. Fill in your Supabase credentials and backend URL:
    ```
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
    SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+   NEXT_PUBLIC_API_URL=https://your-backend-url.onrender.com
    ```
 
-### 3. Install Dependencies
+### 3. Backend Setup
+
+The backend server is located in the `/server` directory and handles API requests, file uploads, and data fetching.
+
+#### Local Development:
+```bash
+cd server
+npm install
+npm run dev
+```
+
+#### Production (Render):
+The backend is automatically deployed to Render. Make sure to set these environment variables in Render:
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+
+### 4. Frontend Setup
+
+#### Install Dependencies
 
 ```bash
 npm install
 ```
 
-### 4. Run Development Server
+#### Run Development Server
 
 ```bash
 npm run dev

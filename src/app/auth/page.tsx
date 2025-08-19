@@ -35,7 +35,7 @@ export default function AuthPage() {
 
       try {
         // Use our API endpoint to check if email exists
-        const response = await fetch('/api/check-email', {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/check-email`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

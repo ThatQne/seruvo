@@ -25,7 +25,9 @@ export default function APIExplorerPage() {
     setResponse('')
 
     try {
-      const res = await fetch(customUrl)
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://your-backend-url.onrender.com'
+      const fullUrl = `${API_BASE_URL}${customUrl}`
+      const res = await fetch(fullUrl)
       const data = await res.json()
       setResponse(JSON.stringify(data, null, 2))
     } catch (error) {
@@ -132,10 +134,10 @@ export default function APIExplorerPage() {
                     </label>
                     <input
                       type="text"
-                      value={`${typeof window !== 'undefined' ? window.location.origin : 'https://your-domain.com'}${customUrl}`}
+                      value={`${process.env.NEXT_PUBLIC_API_URL || 'https://your-backend-url.onrender.com'}${customUrl}`}
                       onChange={(e) => {
-                        const origin = typeof window !== 'undefined' ? window.location.origin : 'https://your-domain.com'
-                        const newUrl = e.target.value.replace(origin, '')
+                        const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://your-backend-url.onrender.com'
+                        const newUrl = e.target.value.replace(backendUrl, '')
                         setCustomUrl(newUrl)
                       }}
                       style={{
@@ -207,7 +209,7 @@ export default function APIExplorerPage() {
               <CardContent>
                 <div style={{ background: theme.grayscale.background, color: theme.grayscale.foreground, borderRadius: 8, padding: 16, overflowX: 'auto' }}>
                   <code className="text-sm">
-                    curl -X GET "{typeof window !== 'undefined' ? window.location.origin : 'https://your-domain.com'}{customUrl}"
+                    curl -X GET "{process.env.NEXT_PUBLIC_API_URL || 'https://your-backend-url.onrender.com'}{customUrl}"
                   </code>
                 </div>
               </CardContent>

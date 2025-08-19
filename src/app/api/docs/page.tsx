@@ -1,4 +1,9 @@
-import { Card, CardContent, CardHeader } from '@/components/ui/Card'
+import { Card, CardCont            <div style={{ background: theme.accent.blue + '22', border: `1px solid ${theme.accent.blue}55`, borderRadius: 12, padding: 16 }}>
+              <h3 className="font-medium mb-2" style={{ color: theme.accent.blue }}>Base URL</h3>
+              <code style={{ color: theme.accent.blue, background: theme.grayscale.background, padding: '2px 8px', borderRadius: 6 }}>
+                {process.env.NEXT_PUBLIC_API_URL || 'https://your-domain.com/api'}
+              </code>
+            </div>ardHeader } from '@/components/ui/Card'
 import { theme } from '@/config/theme'
 export default function ApiDocsPage() {
   return (
@@ -18,13 +23,13 @@ export default function ApiDocsPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <p style={{ color: theme.grayscale.muted }}>
-            The ImageHost API provides programmatic access to public albums and images. 
+            The ImageHost API provides programmatic access to public albums and images through a dedicated backend server. 
             All endpoints return JSON responses and support CORS for browser-based applications.
           </p>
           <div style={{ background: theme.accent.blue + '22', border: `1px solid ${theme.accent.blue}55`, borderRadius: 12, padding: 16 }}>
             <h3 className="font-medium mb-2" style={{ color: theme.accent.blue }}>Base URL</h3>
             <code style={{ color: theme.accent.blue, background: theme.grayscale.background, padding: '2px 8px', borderRadius: 6 }}>
-              {typeof window !== 'undefined' ? window.location.origin : 'https://your-domain.com'}/api
+              {process.env.NEXT_PUBLIC_API_URL || 'https://your-backend-url.onrender.com'}
             </code>
           </div>
         </CardContent>

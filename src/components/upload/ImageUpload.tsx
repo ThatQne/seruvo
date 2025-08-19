@@ -152,7 +152,7 @@ export default function ImageUpload({ albumId, onUploadComplete, isPublicAlbum =
           formData.append('albumId', albumId)
           formData.append('userId', user.id)
 
-          const response = await fetch('/api/upload', {
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/upload`, {
             method: 'POST',
             body: formData
           })
