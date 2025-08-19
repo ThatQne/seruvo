@@ -159,7 +159,12 @@ app.post('/api/check-email', async (req, res) => {
   }
 
   try {
-    const { data: profile, error: profileError } = await supabase
+    const serviceClient = getServiceClient();
+    const client = serviceClient || supabase; // prefer service role (bypasses RLS)
+
+    // With current RLS, anon client cannot read other users' profiles.
+    // So we rely on service role to get an accurate answer.
+    const { data: profile, error: profileError } = await client
       .from('profiles')
       .select('id')
       .eq('email', email)
@@ -173,23 +178,22 @@ app.post('/api/check-email', async (req, res) => {
       return res.json({ exists: true, source: 'profiles', ms: Date.now() - started });
     }
 
-    // Fallback: if profile missing but user might exist (trigger not run), check auth.users with service role
-    const serviceClient = getServiceClient();
+    // If no profile but service client present, verify user exists via admin API
     if (serviceClient) {
-      const { data: authUsers, error: authError } = await serviceClient
-        .from('auth.users' as any)
-        .select('id, email')
-        .eq('email', email)
-        .limit(1);
-      if (authError) {
-        console.error('[check-email] auth.users lookup error', authError);
-      }
-      if (authUsers && authUsers.length > 0) {
-        return res.json({ exists: true, source: 'auth.users', ms: Date.now() - started });
+      try {
+        // Fallback: list users (paginated) and find email (small scale acceptable). For large scale implement RPC.
+        const { data: listData, error: listErr } = await serviceClient.auth.admin.listUsers({ perPage: 100 });
+        if (listErr) {
+          console.error('[check-email] admin.listUsers error', listErr);
+        } else if (listData && listData.users?.some(u => u.email?.toLowerCase() === email.toLowerCase())) {
+          return res.json({ exists: true, source: 'auth.admin.listUsers', ms: Date.now() - started });
+        }
+      } catch (adminErr) {
+        console.error('[check-email] admin lookup exception', adminErr);
       }
     }
 
-    return res.json({ exists: false, ms: Date.now() - started });
+    return res.json({ exists: false, source: 'none', ms: Date.now() - started });
   } catch (e) {
     console.error('[check-email] unexpected error', e);
     return res.status(500).json({ error: 'Failed to check email' });
