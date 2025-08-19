@@ -13,6 +13,8 @@ export function createSupabaseClient() {
   return createBrowserClient(supabaseUrl, supabaseAnonKey)
 }
 
+// this better work
+
 export type Database = {
   public: {
     Tables: {
