@@ -1,103 +1,201 @@
-import Image from "next/image";
+'use client'
+import { theme } from '@/config/theme'
+
+import Link from 'next/link'
+import { useAuth } from '@/contexts/AuthContext'
+import Button from '@/components/ui/Button'
+import { Card, CardContent } from '@/components/ui/Card'
+import { Camera, Upload, FolderOpen, Zap, Shield, Globe } from 'lucide-react'
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const { user } = useAuth()
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  return (
+    <div className="space-y-16">
+      {/* Hero Section */}
+      <section className="text-center space-y-8">
+        <div className="space-y-4">
+          <h1 className="text-4xl md:text-6xl font-bold" style={{ color: theme.grayscale.foreground }}>
+            Modern Image Hosting
+          </h1>
+          <p className="text-xl max-w-2xl mx-auto" style={{ color: theme.grayscale.muted }}>
+            Upload, organize, and share your images with a clean, minimalist platform.
+            Built for developers with powerful APIs.
+          </p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          {user ? (
+            <>
+              <Link href="/dashboard">
+                <Button
+                  size="lg"
+                  className="w-full sm:w-auto"
+                  style={{
+                    background: theme.accent.blue,
+                    color: theme.grayscale.background,
+                    border: `1px solid ${theme.accent.blue}`,
+                    fontWeight: 600,
+                  }}
+                  onMouseOver={e => {
+                    e.currentTarget.style.background = theme.accent.purple;
+                    e.currentTarget.style.borderColor = theme.accent.purple;
+                  }}
+                  onMouseOut={e => {
+                    e.currentTarget.style.background = theme.accent.blue;
+                    e.currentTarget.style.borderColor = theme.accent.blue;
+                  }}
+                >
+                  Go to Dashboard
+                </Button>
+              </Link>
+              <Link href="/upload">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="w-full sm:w-auto"
+                  style={{
+                    background: theme.grayscale.surface,
+                    color: theme.accent.blue,
+                    border: `1px solid ${theme.accent.blue}`,
+                    fontWeight: 600,
+                  }}
+                  onMouseOver={e => {
+                    e.currentTarget.style.background = theme.accent.blue;
+                    e.currentTarget.style.color = theme.grayscale.background;
+                  }}
+                  onMouseOut={e => {
+                    e.currentTarget.style.background = theme.grayscale.surface;
+                    e.currentTarget.style.color = theme.accent.blue;
+                  }}
+                >
+                  Upload Images
+                </Button>
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link href="/auth">
+                <Button
+                  size="lg"
+                  className="w-full sm:w-auto"
+                  style={{
+                    background: theme.accent.blue,
+                    color: theme.grayscale.background,
+                    border: `1px solid ${theme.accent.blue}`,
+                    fontWeight: 600,
+                  }}
+                  onMouseOver={e => {
+                    e.currentTarget.style.background = theme.accent.purple;
+                    e.currentTarget.style.borderColor = theme.accent.purple;
+                  }}
+                  onMouseOut={e => {
+                    e.currentTarget.style.background = theme.accent.blue;
+                    e.currentTarget.style.borderColor = theme.accent.blue;
+                  }}
+                >
+                  Get Started Free
+                </Button>
+              </Link>
+            </>
+          )}
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="grid md:grid-cols-3 gap-8">
+        <Card variant="elevated" style={{ background: theme.grayscale.surface, border: `1px solid ${theme.grayscale.border}` }}>
+          <CardContent className="p-6 text-center space-y-4">
+            <div className="w-12 h-12 rounded-lg flex items-center justify-center mx-auto" style={{ background: theme.accent.blue + '22' }}>
+              <Upload className="h-6 w-6" style={{ color: theme.accent.blue }} />
+            </div>
+            <h3 className="text-xl font-semibold" style={{ color: theme.grayscale.foreground }}>Drag & Drop Upload</h3>
+            <p style={{ color: theme.grayscale.muted }}>
+              Simply drag and drop your images for instant upload with progress tracking.
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card variant="elevated" style={{ background: theme.grayscale.surface, border: `1px solid ${theme.grayscale.border}` }}>
+          <CardContent className="p-6 text-center space-y-4">
+            <div className="w-12 h-12 rounded-lg flex items-center justify-center mx-auto" style={{ background: theme.accent.green + '22' }}>
+              <FolderOpen className="h-6 w-6" style={{ color: theme.accent.green }} />
+            </div>
+            <h3 className="text-xl font-semibold" style={{ color: theme.grayscale.foreground }}>Album Management</h3>
+            <p style={{ color: theme.grayscale.muted }}>
+              Organize your images into albums with easy management and sharing options.
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card variant="elevated" style={{ background: theme.grayscale.surface, border: `1px solid ${theme.grayscale.border}` }}>
+          <CardContent className="p-6 text-center space-y-4">
+            <div className="w-12 h-12 rounded-lg flex items-center justify-center mx-auto" style={{ background: theme.accent.purple + '22' }}>
+              <Zap className="h-6 w-6" style={{ color: theme.accent.purple }} />
+            </div>
+            <h3 className="text-xl font-semibold" style={{ color: theme.grayscale.foreground }}>API Access</h3>
+            <p style={{ color: theme.grayscale.muted }}>
+              RESTful APIs for seamless integration with your projects and applications.
+            </p>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* Benefits Section */}
+      <section
+        className="rounded-2xl p-8 md:p-12"
+        style={{
+          background: theme.grayscale.surface,
+          border: `1px solid ${theme.grayscale.border}`,
+          color: theme.grayscale.foreground,
+        }}
+      >
+        <div className="text-center space-y-8">
+          <h2 className="text-3xl font-bold" style={{ color: theme.grayscale.foreground }}>Why Choose ImageHost?</h2>
+
+          <div className="grid md:grid-cols-2 gap-8 text-left">
+            <div className="flex items-start space-x-4">
+              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Shield className="h-4 w-4 text-blue-600" />
+              </div>
+              <div>
+                <h4 className="font-semibold mb-2" style={{ color: theme.grayscale.foreground }}>Secure & Reliable</h4>
+                <p style={{ color: theme.grayscale.muted }}>Your images are stored securely with Supabase&apos;s enterprise-grade infrastructure.</p>
+              </div>
+            </div>
+
+            <div className="flex items-start space-x-4">
+              <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Globe className="h-4 w-4 text-green-600" />
+              </div>
+              <div>
+                <h4 className="font-semibold mb-2" style={{ color: theme.grayscale.foreground }}>Global CDN</h4>
+                <p style={{ color: theme.grayscale.muted }}>Fast image delivery worldwide with optimized performance and caching.</p>
+              </div>
+            </div>
+
+            <div className="flex items-start space-x-4">
+              <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Camera className="h-4 w-4 text-purple-600" />
+              </div>
+              <div>
+                <h4 className="font-semibold mb-2" style={{ color: theme.grayscale.foreground }}>Multiple Formats</h4>
+                <p style={{ color: theme.grayscale.muted }}>Support for JPEG, PNG, GIF, and WebP formats with automatic optimization.</p>
+              </div>
+            </div>
+
+            <div className="flex items-start space-x-4">
+              <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Zap className="h-4 w-4 text-orange-600" />
+              </div>
+              <div>
+                <h4 className="font-semibold mb-2" style={{ color: theme.grayscale.foreground }}>Developer Friendly</h4>
+                <p style={{ color: theme.grayscale.muted }}>Clean APIs, comprehensive documentation, and easy integration.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
-  );
+  )
 }
