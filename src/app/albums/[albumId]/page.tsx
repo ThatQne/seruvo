@@ -168,10 +168,36 @@ export default function AlbumDetailPage({ params }: { params: Promise<{ albumId:
     }
   }
 
+  const deleteSingleImage = async (image: ImageData) => {
+    if (!confirm('Delete this image? This cannot be undone.')) return
+    try {
+      // Remove from storage first
+      const { error: storageError } = await supabase.storage.from('images').remove([image.storage_path])
+      if (storageError) throw storageError
+      // Remove from DB
+      const { error: dbError } = await supabase
+        .from('images')
+        .delete()
+        .eq('id', image.id)
+        .eq('user_id', user?.id)
+      if (dbError) throw dbError
+      // Update state
+      setImages(prev => prev.filter(i => i.id !== image.id))
+      setSelectedImages(prev => {
+        const next = new Set(prev)
+        next.delete(image.id)
+        return next
+      })
+    } catch (err) {
+      console.error('Error deleting image:', err)
+      alert('Failed to delete image. See console for details.')
+    }
+  }
+
   // Cleanup expired images (run on mount and every X minutes)
   useEffect(() => {
     const cleanupExpiredImages = async () => {
-      if (!albumId) return; // Prevent invalid uuid query
+  if (!albumId || !user?.id) return; // Guard against undefined user id causing bad UUID filter
       try {
         // Find expired images (expires_at in past or expires_on_open and opened)
         const { data: expired, error } = await supabase
@@ -680,6 +706,14 @@ export default function AlbumDetailPage({ params }: { params: Promise<{ albumId:
                       >
                         <Edit className="h-4 w-4" />
                       </button>
+                      <button
+                        onClick={() => deleteSingleImage(image)}
+                        style={{ background: theme.grayscale.surface, color: theme.accent.pink, borderRadius: '9999px', boxShadow: '0 2px 8px 0 rgba(0,0,0,0.10)' }}
+                        className="p-1 hover:opacity-80"
+                        title="Delete image"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -851,6 +885,14 @@ export default function AlbumDetailPage({ params }: { params: Promise<{ albumId:
                             title="Rename image"
                           >
                             <Edit className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => deleteSingleImage(image)}
+                            style={{ color: theme.accent.pink }}
+                            className="hover:opacity-80"
+                            title="Delete image"
+                          >
+                            <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
       {/* Rename Image Modal */}

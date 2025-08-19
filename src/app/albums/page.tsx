@@ -136,47 +136,63 @@ export default function AlbumsPage() {
   }
 
   const deleteAlbum = async (albumId: string) => {
-    if (!confirm('Are you sure you want to delete this album? This action cannot be undone.')) {
-      return
-    }
+    if (!user?.id) return
+    if (!confirm('Delete this album and all its images? This cannot be undone.')) return
+
+    const BATCH_SIZE = 50
 
     try {
-      // 1. Get all images in the album (to get their storage paths)
-      const { data: images, error: imagesError } = await supabase
-        .from('images')
-        .select('id, storage_path')
-        .eq('album_id', albumId)
-        .eq('user_id', user?.id)
-
-      if (imagesError) throw imagesError
-
-      // 2. Delete all image files from storage
-      if (images && images.length > 0) {
-        const storagePaths = images.map(img => img.storage_path)
-        // Remove from storage (bucket: 'images')
-        const { error: storageError } = await supabase.storage.from('images').remove(storagePaths)
-        if (storageError) throw storageError
+      // 1. Gather all image storage paths (paginate if many)
+      let allImages: { id: string; storage_path: string }[] = []
+      let from = 0
+      const pageSize = 100
+      while (true) {
+        const { data, error } = await supabase
+          .from('images')
+          .select('id, storage_path')
+          .eq('album_id', albumId)
+          .eq('user_id', user.id)
+          .range(from, from + pageSize - 1)
+        if (error) throw error
+        if (!data || data.length === 0) break
+        allImages = allImages.concat(data)
+        if (data.length < pageSize) break
+        from += pageSize
       }
 
-      // 3. Delete all image records from DB
-      const { error: dbImagesError } = await supabase
-        .from('images')
-        .delete()
-        .eq('album_id', albumId)
-        .eq('user_id', user?.id)
-      if (dbImagesError) throw dbImagesError
+      // 2. Delete DB image records first (so UI consistency even if storage partial)
+      if (allImages.length > 0) {
+        const { error: dbImagesError } = await supabase
+          .from('images')
+          .delete()
+          .eq('album_id', albumId)
+          .eq('user_id', user.id)
+        if (dbImagesError) throw dbImagesError
+      }
 
-      // 4. Delete the album itself
+      // 3. Delete album record
       const { error: albumError } = await supabase
         .from('albums')
         .delete()
         .eq('id', albumId)
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
       if (albumError) throw albumError
+
+      // 4. Batch remove storage files (best-effort). If it fails, we log orphaned files.
+      const storagePaths = allImages.map(i => i.storage_path)
+      for (let i = 0; i < storagePaths.length; i += BATCH_SIZE) {
+        const slice = storagePaths.slice(i, i + BATCH_SIZE)
+        const { error: storageError } = await supabase.storage.from('images').remove(slice)
+        if (storageError) {
+          console.warn('Partial storage deletion failure for batch', slice, storageError)
+          // continue attempting remaining batches
+        }
+      }
 
       setAlbums(prev => prev.filter(album => album.id !== albumId))
     } catch (error) {
       console.error('Error deleting album and its images:', error)
+      alert('Failed to delete album. See console for details.')
     }
   }
 
