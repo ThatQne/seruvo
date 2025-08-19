@@ -37,10 +37,20 @@ try {
   execSync('git push origin main', { stdio: 'inherit' });
 
   console.log('✅ Changes pushed successfully!');
-  console.log('🤖 GitHub Actions will now:');
-  console.log('   1. ✅ Build your project automatically');
-  console.log('   2. ✅ Deploy to GitHub Pages automatically');
-  console.log('🔗 Your site will be available at: https://ThatQne.github.io/seruvo');
+  console.log('🚀 Deployment Strategy:');
+  console.log('');
+  console.log('📦 BACKEND (Render):');
+  console.log('   1. Connect your GitHub repo to Render');
+  console.log('   2. Create a Web Service pointing to /server directory');
+  console.log('   3. Set build command: npm install && npm run build');
+  console.log('   4. Set start command: npm start');
+  console.log('');
+  console.log('🌐 FRONTEND (GitHub Pages):');
+  console.log('   1. ✅ GitHub Actions will build and deploy automatically');
+  console.log('   2. ✅ Add NEXT_PUBLIC_API_URL secret in repo settings');
+  console.log('   3. ✅ Site will be available at: https://ThatQne.github.io/seruvo');
+  console.log('');
+  console.log('🔗 Setup Guide: https://github.com/ThatQne/seruvo/blob/main/DEPLOYMENT.md');
   console.log('📊 Check deployment status: https://github.com/ThatQne/seruvo/actions');
 
 } catch (error) {
