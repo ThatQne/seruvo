@@ -171,20 +171,6 @@ app.post('/api/check-email', async (req, res) => {
   res.json({ exists: !!data });
 });
 
-app.get('/api/albums', async (req, res) => {
-  const { data, error } = await supabase
-    .from('albums')
-    .select('*')
-    .eq('is_public', true)
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    return res.status(500).json({ error: 'Failed to fetch albums' });
-  }
-
-  res.json(data || []);
-});
-
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });

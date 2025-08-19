@@ -17,17 +17,11 @@ interface Image {
 
 export const api = {
   // Album endpoints
-  getAlbums: () => 
-    fetcher<Album[]>('/api/albums'),
-  
   getAlbum: (albumId: string) => 
     fetcher<Album>(`/api/albums/${albumId}`),
   
   getAlbumImages: (albumId: string) => 
     fetcher<Image[]>(`/api/albums/${albumId}/images`),
-  
-  getPublicAlbums: () => 
-    fetcher<Album[]>('/api/albums'),
   
   // Image endpoints
   getImage: (imageId: string) => 
