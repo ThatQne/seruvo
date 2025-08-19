@@ -266,7 +266,11 @@ export default function AlbumDetailPage({ params }: { params: Promise<{ albumId:
       if (albumError) throw albumError
 
       // Prepare update data
-      const updateData: any = { album_id: targetAlbumId }
+      const updateData: {
+        album_id: string;
+        expires_at?: string | null;
+        expires_on_open?: boolean;
+      } = { album_id: targetAlbumId }
 
       // If moving to a private album, clear expiry settings
       if (!targetAlbum.is_public) {
@@ -291,7 +295,7 @@ export default function AlbumDetailPage({ params }: { params: Promise<{ albumId:
     }
   }
 
-  const getExpiryInfo = (image: any) => {
+  const getExpiryInfo = (image: ImageData & { expires_at?: string | null; expires_on_open?: boolean }) => {
     // Handle "expires on open" case first - but check if it has been opened and has expiry time
     if (image.expires_on_open && !image.expires_at) {
       return { text: 'Expires on view', color: 'text-orange-600', urgent: false, bgColor: 'bg-orange-100' }
