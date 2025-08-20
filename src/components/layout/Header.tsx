@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import Button from '@/components/ui/Button'
 import { Camera, User, LogOut, Settings } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 
 import { theme } from '@/config/theme'
 
@@ -13,12 +13,34 @@ export default function Header() {
   const { user, signOut } = useAuth()
   const [showUserMenu, setShowUserMenu] = useState(false)
   const router = useRouter()
+  const userMenuRef = useRef<HTMLDivElement | null>(null)
 
   const handleSignOut = async () => {
     await signOut()
     setShowUserMenu(false)
     router.push('/auth')
   }
+
+  // Close user menu on outside click or Escape
+  useEffect(() => {
+    if (!showUserMenu) return
+    const handleClick = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setShowUserMenu(false)
+      }
+    }
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowUserMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    document.addEventListener('keydown', handleKey)
+    return () => {
+      document.removeEventListener('mousedown', handleClick)
+      document.removeEventListener('keydown', handleKey)
+    }
+  }, [showUserMenu])
 
   return (
     <header
@@ -40,7 +62,7 @@ export default function Header() {
           {/* User Menu */}
           <div className="flex items-center space-x-4">
             {user ? (
-              <div className="relative">
+              <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center space-x-2 transition-colors"

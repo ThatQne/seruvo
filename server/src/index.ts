@@ -14,27 +14,16 @@ const cleanupIntervalMs = parseInt(process.env.IMAGE_CLEANUP_INTERVAL_MS || '100
 // Include localhost and deployed Vercel domain by default (can be overridden via env)
 const rawAllowed = 'http://localhost:3000,https://seruvo.vercel.app';
 // Support comma-separated list
-const allowedOrigins = rawAllowed.split(',').map(o => o.trim()).filter(Boolean);
-const normalizeOrigin = (o?: string | null) => o ? o.replace(/\/$/, '') : o;
-const normalizedAllowed = allowedOrigins.map(normalizeOrigin);
-const corsOptions: cors.CorsOptions = {
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true); // allow non-browser (curl, server-side)
-    const norm = normalizeOrigin(origin);
-    if (normalizedAllowed.includes('*') || (norm && normalizedAllowed.includes(norm))) {
-      return callback(null, true);
-    }
-    return callback(new Error(`Origin ${origin} not allowed by CORS`));
-  },
+// --- CORS Configuration (Permissive: allow all origins) ---
+// If you later want to restrict again, reintroduce an allow-list. For now, fully open.
+app.use(cors({
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-  exposedHeaders: ['Content-Length'],
   credentials: false,
   maxAge: 86400,
-};
-app.use(cors(corsOptions));
-// Explicit preflight handling (some hosting setups skip middleware on 404)
-app.options('*', cors(corsOptions));
+}));
+app.options('*', cors({ origin: '*' }));
 app.use(express.json());
 
 // Health check endpoint
@@ -99,11 +88,8 @@ app.get('/api/stream/image/:imageId', (req, res) => {
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
-  // Ensure CORS headers present for EventSource (especially on some proxies)
-  const requestOrigin = req.headers.origin;
-  if (requestOrigin && (allowedOrigins.includes('*') || allowedOrigins.includes(requestOrigin))) {
-    res.setHeader('Access-Control-Allow-Origin', requestOrigin);
-  }
+  // Open CORS for SSE as well
+  res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
   res.flushHeaders?.();
@@ -427,6 +413,52 @@ app.post('/api/cleanup-expired', async (_req, res) => {
   } catch (e) {
     console.error('[manual-cleanup-expired] error', e);
     res.status(500).json({ error: 'Cleanup failed' });
+  }
+});
+
+// Delete entire account (irreversible). Body: { userId: string }
+app.post('/api/delete-account', async (req, res) => {
+  const { userId } = req.body as { userId?: string };
+  if (!userId) return res.status(400).json({ error: 'Missing userId' });
+  const serviceClient = getServiceClient();
+  if (!serviceClient) {
+    return res.status(500).json({ error: 'Service role key not configured on server' });
+  }
+  try {
+    // Fetch storage paths first (will be lost after user deletion due to cascade)
+    const { data: pathsData, error: pathsErr } = await serviceClient
+      .from('images')
+      .select('storage_path')
+      .eq('user_id', userId);
+    if (pathsErr) {
+      console.warn('[delete-account] failed to list image storage paths', pathsErr);
+    }
+    const storagePaths = (pathsData || []).map(r => r.storage_path);
+
+    // Best-effort storage cleanup in batches
+    const STORAGE_BATCH = 50;
+    let storageFailures: string[] = [];
+    for (let i = 0; i < storagePaths.length; i += STORAGE_BATCH) {
+      const slice = storagePaths.slice(i, i + STORAGE_BATCH);
+      const { error: storageError } = await serviceClient.storage.from('images').remove(slice);
+      if (storageError) {
+        console.warn('[delete-account] storage batch failed', slice, storageError);
+        storageFailures = storageFailures.concat(slice);
+      }
+    }
+
+    // Delete auth user (cascades via FK to profiles -> albums/images)
+    const { error: delErr } = await serviceClient.auth.admin.deleteUser(userId);
+    if (delErr) {
+      console.error('[delete-account] admin deleteUser error', delErr);
+      return res.status(500).json({ error: 'Failed to delete user' });
+    }
+
+    broadcastImageEvent(userId, 'account_deleted'); // optional (no specific subscribers likely)
+    return res.json({ deleted: true, storageFailures });
+  } catch (e) {
+    console.error('[delete-account] unexpected error', e);
+    return res.status(500).json({ error: 'Account deletion failed' });
   }
 });
 
