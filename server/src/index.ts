@@ -10,8 +10,31 @@ const app = express();
 const port = process.env.PORT || 3001;
 const cleanupIntervalMs = parseInt(process.env.IMAGE_CLEANUP_INTERVAL_MS || '100000', 10); // default 5 min
 
-// Middleware
-app.use(cors());
+// --- CORS Configuration ---
+// Include localhost and deployed Vercel domain by default (can be overridden via env)
+const rawAllowed = 'http://localhost:3000,https://seruvo.vercel.app';
+// Support comma-separated list
+const allowedOrigins = rawAllowed.split(',').map(o => o.trim()).filter(Boolean);
+const normalizeOrigin = (o?: string | null) => o ? o.replace(/\/$/, '') : o;
+const normalizedAllowed = allowedOrigins.map(normalizeOrigin);
+const corsOptions: cors.CorsOptions = {
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true); // allow non-browser (curl, server-side)
+    const norm = normalizeOrigin(origin);
+    if (normalizedAllowed.includes('*') || (norm && normalizedAllowed.includes(norm))) {
+      return callback(null, true);
+    }
+    return callback(new Error(`Origin ${origin} not allowed by CORS`));
+  },
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  exposedHeaders: ['Content-Length'],
+  credentials: false,
+  maxAge: 86400,
+};
+app.use(cors(corsOptions));
+// Explicit preflight handling (some hosting setups skip middleware on 404)
+app.options('*', cors(corsOptions));
 app.use(express.json());
 
 // Health check endpoint
@@ -76,6 +99,13 @@ app.get('/api/stream/image/:imageId', (req, res) => {
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
+  // Ensure CORS headers present for EventSource (especially on some proxies)
+  const requestOrigin = req.headers.origin;
+  if (requestOrigin && (allowedOrigins.includes('*') || allowedOrigins.includes(requestOrigin))) {
+    res.setHeader('Access-Control-Allow-Origin', requestOrigin);
+  }
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
   res.flushHeaders?.();
 
   if (!imageSubscribers[imageId]) imageSubscribers[imageId] = new Set();

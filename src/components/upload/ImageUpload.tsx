@@ -1,6 +1,7 @@
 'use client'
 import { theme } from '@/config/theme'
 import { useCallback, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useDropzone } from 'react-dropzone'
 import { createSupabaseClient } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
@@ -27,6 +28,7 @@ interface ImageUploadProps {
 
 export default function ImageUpload({ albumId, onUploadComplete, isPublicAlbum = true }: ImageUploadProps) {
   const { user } = useAuth()
+  const router = useRouter()
   const [uploadFiles, setUploadFiles] = useState<UploadFile[]>([])
   const [uploading, setUploading] = useState(false)
   const [expiryOption, setExpiryOption] = useState<'never' | 'on-open' | '1-hour' | '1-day' | '3-days' | '7-days'>('never')
@@ -477,10 +479,44 @@ export default function ImageUpload({ albumId, onUploadComplete, isPublicAlbum =
 
           {/* Clear All Button */}
           {allFilesProcessed && (
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 10 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 14, gap: 12, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 10 }}>
+                {albumId && (
+                  <Button
+                    variant="outline"
+                    onClick={() => router.push(`/albums/${albumId}`)}
+                    className="transition-colors"
+                    style={{
+                      borderColor: theme.accent.blue,
+                      color: theme.accent.blue,
+                      background: theme.grayscale.surface,
+                    }}
+                    onMouseOver={e => {
+                      e.currentTarget.style.background = theme.accent.blue + '22'
+                    }}
+                    onMouseOut={e => {
+                      e.currentTarget.style.background = theme.grayscale.surface
+                    }}
+                  >
+                    Go To Album
+                  </Button>
+                )}
+              </div>
               <Button
                 variant="outline"
                 onClick={() => setUploadFiles([])}
+                className="transition-colors"
+                style={{
+                  borderColor: theme.accent.pink,
+                  color: theme.accent.pink,
+                  background: theme.grayscale.surface
+                }}
+                onMouseOver={e => {
+                  e.currentTarget.style.background = theme.accent.pink + '22'
+                }}
+                onMouseOut={e => {
+                  e.currentTarget.style.background = theme.grayscale.surface
+                }}
               >
                 Clear All
               </Button>
