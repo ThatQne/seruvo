@@ -63,6 +63,7 @@ CREATE INDEX IF NOT EXISTS idx_images_album_id ON public.images(album_id);
 CREATE INDEX IF NOT EXISTS idx_images_user_id ON public.images(user_id);
 CREATE INDEX IF NOT EXISTS idx_albums_created_at ON public.albums(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_images_created_at ON public.images(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_images_expires_at ON public.images(expires_at);
 
 -- Enable Row Level Security
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;

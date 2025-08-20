@@ -64,6 +64,54 @@ export default function SharedImagePage({ params }: { params: Promise<{ imageId:
     return () => clearInterval(timer)
   }, [])
 
+  // SSE stream subscription (no polling, no Supabase Realtime access needed)
+  useEffect(() => {
+    if (!imageId) return
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL
+    if (!apiUrl) return
+    const es = new EventSource(`${apiUrl}/api/stream/image/${imageId}`)
+
+    const handleExpiredOrDeleted = (msg: string) => {
+      setError(msg)
+      setImage(null)
+    }
+
+    es.addEventListener('deleted', () => handleExpiredOrDeleted('This image has expired or been removed'))
+    es.addEventListener('expired', () => handleExpiredOrDeleted('This image has expired and is no longer available'))
+    es.addEventListener('updated', (e: MessageEvent) => {
+      try {
+        const data = JSON.parse(e.data)
+        if (data.expires_at && new Date(data.expires_at) < new Date()) {
+          handleExpiredOrDeleted('This image has expired and is no longer available')
+        } else {
+          setImage(prev => prev ? { ...prev, expires_at: data.expires_at || prev.expires_at } : prev)
+        }
+      } catch {}
+    })
+
+    return () => {
+      es.close()
+    }
+  }, [imageId])
+
+  // Local expiry timeout to flip UI exactly at expires_at without requiring a server delete first
+  useEffect(() => {
+    if (!image || !image.expires_at) return
+    const expiresAtMs = new Date(image.expires_at).getTime()
+    const now = Date.now()
+    const diff = expiresAtMs - now
+    if (diff <= 0) {
+      setError('This image has expired and is no longer available')
+      setImage(null)
+      return
+    }
+    const timeout = setTimeout(() => {
+      setError('This image has expired and is no longer available')
+      setImage(null)
+    }, diff)
+    return () => clearTimeout(timeout)
+  }, [image?.expires_at])
+
   const fetchSharedImage = async () => {
     try {
       const { data, error } = await supabase

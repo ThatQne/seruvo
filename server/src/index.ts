@@ -30,6 +30,71 @@ const upload = multer({
   }
 });
 
+// --- In-memory realtime (SSE) infrastructure (per process, not clustered) ---
+interface ImageEventPayload {
+  imageId: string;
+  [key: string]: any;
+}
+const imageSubscribers: Record<string, Set<express.Response>> = {};
+const imageExpiryTimers = new Map<string, NodeJS.Timeout>();
+
+function broadcastImageEvent(imageId: string, event: string, payload: Record<string, any> = {}) {
+  const subs = imageSubscribers[imageId];
+  if (!subs || subs.size === 0) return;
+  const data: ImageEventPayload = { imageId, ...payload };
+  const serialized = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+  subs.forEach(res => {
+    try { res.write(serialized); } catch { /* ignore broken pipe */ }
+  });
+}
+
+function scheduleExpiry(imageId: string, expiresAtIso?: string | null) {
+  if (!expiresAtIso) return;
+  const ts = Date.parse(expiresAtIso);
+  if (Number.isNaN(ts)) return;
+  const now = Date.now();
+  const diff = ts - now;
+  // Clear any existing timer
+  const existing = imageExpiryTimers.get(imageId);
+  if (existing) clearTimeout(existing);
+  if (diff <= 0) {
+    // Already expired - broadcast immediately (cleanup job will delete soon)
+    broadcastImageEvent(imageId, 'expired', { expires_at: expiresAtIso });
+    return;
+  }
+  const timer = setTimeout(() => {
+    broadcastImageEvent(imageId, 'expired', { expires_at: expiresAtIso });
+    imageExpiryTimers.delete(imageId);
+  }, diff);
+  imageExpiryTimers.set(imageId, timer);
+}
+
+// SSE endpoint for a single image
+app.get('/api/stream/image/:imageId', (req, res) => {
+  const { imageId } = req.params;
+  if (!imageId) return res.status(400).end();
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders?.();
+
+  if (!imageSubscribers[imageId]) imageSubscribers[imageId] = new Set();
+  imageSubscribers[imageId].add(res);
+
+  // Initial event
+  res.write(`event: connected\ndata: ${JSON.stringify({ imageId })}\n\n`);
+
+  const heartbeat = setInterval(() => {
+    try { res.write('event: ping\ndata: {}\n\n'); } catch { /* ignore */ }
+  }, 25000);
+
+  req.on('close', () => {
+    clearInterval(heartbeat);
+    imageSubscribers[imageId].delete(res);
+    if (imageSubscribers[imageId].size === 0) delete imageSubscribers[imageId];
+  });
+});
+
 // Routes
 app.get('/api/albums/:albumId', async (req, res) => {
   const { albumId } = req.params;
@@ -218,12 +283,13 @@ app.post('/api/delete-images', async (req, res) => {
     if (fetchErr) throw fetchErr;
     const paths = (images || []).map(i => i.storage_path);
     // Delete DB rows first so UI state stays consistent even if storage partially fails
-    const { error: dbErr } = await serviceClient
+  const { error: dbErr } = await serviceClient
       .from('images')
       .delete()
       .in('id', imageIds)
       .eq('user_id', userId);
     if (dbErr) throw dbErr;
+  imageIds.forEach(id => broadcastImageEvent(id, 'deleted'));
     // Remove storage objects (best effort, batch size 50)
     const BATCH = 50;
     let storageFailures: string[] = [];
@@ -259,12 +325,13 @@ app.post('/api/delete-album', async (req, res) => {
     if (fetchErr) throw fetchErr;
     const paths = (images || []).map(i => i.storage_path);
     // Delete image rows
-    const { error: imgDelErr } = await serviceClient
+  const { error: imgDelErr } = await serviceClient
       .from('images')
       .delete()
       .eq('album_id', albumId)
       .eq('user_id', userId);
     if (imgDelErr) throw imgDelErr;
+  (images || []).forEach(i => broadcastImageEvent(i.id, 'deleted'));
     // Delete album row
     const { error: albumErr } = await serviceClient
       .from('albums')
@@ -307,12 +374,14 @@ app.post('/api/open-image', async (req, res) => {
     if (!img.expires_on_open || img.opened_at) {
       return res.json({ expires_at: img.expires_at, alreadyOpened: !!img.opened_at });
     }
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString(); // 5 min default
+  const expiresAt = new Date(Date.now() + 1 * 60 * 1000).toISOString(); // 1 min expiry per requirements
     const { error: updErr } = await client
       .from('images')
       .update({ opened_at: new Date().toISOString(), expires_at: expiresAt })
       .eq('id', imageId);
     if (updErr) throw updErr;
+    scheduleExpiry(imageId, expiresAt);
+    broadcastImageEvent(imageId, 'updated', { expires_at: expiresAt });
     return res.json({ expires_at: expiresAt, started: true });
   } catch (e) {
     console.error('[open-image] error', e);
@@ -358,7 +427,7 @@ async function cleanupExpiredImages() {
       const paths = rows.map(r => r.storage_path);
 
       // Delete DB rows first
-      const { error: delErr } = await client
+  const { error: delErr } = await client
         .from('images')
         .delete()
         .in('id', ids);
@@ -369,6 +438,7 @@ async function cleanupExpiredImages() {
       }
 
       totalDeleted += ids.length;
+  ids.forEach(id => broadcastImageEvent(id, 'deleted', { reason: 'expired' }));
 
       // Remove storage objects best effort
       for (let i = 0; i < paths.length; i += STORAGE_BATCH) {

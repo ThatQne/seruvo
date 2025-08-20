@@ -294,24 +294,16 @@ export default function AlbumDetailPage({ params }: { params: Promise<{ albumId:
 
       if (albumError) throw albumError
 
-      // Prepare update data
-      const updateData: {
-        album_id: string;
-        expires_at?: string | null;
-        expires_on_open?: boolean;
-      } = { album_id: targetAlbumId }
-
-      // If moving to a private album, clear expiry settings
+      // Build a single update (merge opened_at reset when making private)
+      const imageIds = Array.from(selectedImages)
+      const updateData: any = { album_id: targetAlbumId }
       if (!targetAlbum.is_public) {
-        updateData.expires_at = null
-        updateData.expires_on_open = false
+        Object.assign(updateData, { expires_at: null, expires_on_open: false, opened_at: null })
       }
-      // If moving to public album, keep existing expiry settings (no changes needed)
-
       const { error } = await supabase
         .from('images')
         .update(updateData)
-        .in('id', Array.from(selectedImages))
+        .in('id', imageIds)
 
       if (error) throw error
 
