@@ -127,7 +127,7 @@ export default function Footer() {
         <div className="mt-8 pt-8 border-t border-gray-200">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-500 text-sm">
-              © 2024 ImageHost. Built with Next.js and Supabase.
+              © 2026 Seruvo. Built with Next.js and Supabase.
             </p>
             <div className="flex items-center space-x-6 mt-4 md:mt-0">
               <Link

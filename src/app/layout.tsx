@@ -9,7 +9,7 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "ImageHost - Modern Image Hosting Platform",
+  title: "Seruvo - Modern Image Hosting Platform",
   description: "A clean, minimalist image hosting platform with drag-and-drop uploads, album management, and API access.",
 };
 
