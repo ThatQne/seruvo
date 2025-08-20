@@ -1,7 +1,7 @@
 {
-  "name": "imagehost-server",
+  "name": "seruvo-server",
   "version": "1.0.0",
-  "description": "Express backend for ImageHost",
+  "description": "Express backend for Seruvo",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",

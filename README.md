@@ -1,4 +1,4 @@
-# ImageHost - Modern Image Hosting Platform
+# Seruvo - Modern Image Hosting Platform
 
 A clean, minimalist image hosting platform with drag-and-drop uploads, album management, and API access.
 

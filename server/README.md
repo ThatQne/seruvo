@@ -5,7 +5,7 @@ This application can be deployed to Render.com using the following steps:
 1. Create a new Web Service on Render
 2. Connect your GitHub repository
 3. Configure the following settings:
-   - Name: imagehost-api (or your preferred name)
+   - Name: seruvo-api (or your preferred name)
    - Environment: Node
    - Region: Choose nearest to your users
    - Branch: main

@@ -151,7 +151,7 @@ export default function Home() {
         }}
       >
         <div className="text-center space-y-8">
-          <h2 className="text-3xl font-bold" style={{ color: theme.grayscale.foreground }}>Why Choose ImageHost?</h2>
+          <h2 className="text-3xl font-bold" style={{ color: theme.grayscale.foreground }}>Why Choose Seruvo?</h2>
 
           <div className="grid md:grid-cols-2 gap-8 text-left">
             <div className="flex items-start space-x-4">

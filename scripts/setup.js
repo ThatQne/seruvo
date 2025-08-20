@@ -12,7 +12,7 @@ const rl = readline.createInterface({
 const question = (query) => new Promise((resolve) => rl.question(query, resolve));
 
 async function setupEnvironment() {
-  console.log('🚀 ImageHost Environment Setup\n');
+  console.log('🚀 Seruvo Environment Setup\n');
   
   console.log('Please provide the following information:\n');
   
@@ -31,7 +31,7 @@ NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=your_nextauth_secret_here
 
 # App Configuration (OPTIONAL)
-NEXT_PUBLIC_APP_NAME=ImageHost
+NEXT_PUBLIC_APP_NAME=Seruvo
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 # Backend API Configuration

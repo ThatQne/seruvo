@@ -4,7 +4,6 @@
 	"buildCommand": "npm run build",
 	"installCommand": "npm install",
 	"outputDirectory": ".next",
-	"ignoreCommand": "git diff --quiet $VERCEL_GIT_COMMIT_REF $VERCEL_GIT_PREVIOUS_COMMIT_REF || echo 'changed'",
 	"env": {
 		"NEXT_TELEMETRY_DISABLED": "1"
 	}

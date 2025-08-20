@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: imagehost-backend
+  name: seruvo-backend
     env: node
     region: oregon
     plan: free

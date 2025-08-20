@@ -28,7 +28,7 @@ app.use(express.json());
 
 // Health check endpoint
 app.get('/', (req, res) => {
-  res.json({ status: 'OK', message: 'ImageHost API Server is running' });
+  res.json({ status: 'OK', message: 'Seruvo API Server is running' });
 });
 
 app.get('/health', (req, res) => {

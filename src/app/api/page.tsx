@@ -59,7 +59,7 @@ export default function APIExplorerPage() {
                 <h1 className="text-3xl font-bold" style={{ color: theme.grayscale.foreground }}>API Explorer</h1>
               </div>
               <p className="text-lg max-w-3xl" style={{ color: theme.grayscale.muted }}>
-                Test ImageHost API endpoints directly in your browser. Perfect for exploring 
+                Test Seruvo API endpoints directly in your browser. Perfect for exploring 
                 the API before integrating it into your applications.
               </p>
             </div>
